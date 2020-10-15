@@ -1,0 +1,21 @@
+{
+  "name": "worterbuch",
+  "version": "1.0.0",
+  "description": "worterbuch backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "s3fs.github.com",
+  "license": "MIT",
+  "dependencies": {
+    "@vitalets/google-translate-api": "^4.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.5"
+  }
+}
