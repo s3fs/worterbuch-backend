@@ -1,57 +1,79 @@
+require('dotenv').config()
+
+const Entry = require('./models/mongoose')
+
 const express = require('express')
 const cors = require('cors')
+
 const translate = require('@vitalets/google-translate-api')
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
+const entries = Entry.find({})
+
 app.get('/', (req, res) => {
   res.send(
     `<h2>Wordbook API Root Endpoint</h2>
      <p>The API is <a href='./api/words'>here.</a></p>
-     <h4>Currently hosting ${words.length} listings.</h4>
     `)
 })
 
 app.get('/api/words', (req, res) => {
-    res.json(words)
+    entries
+      .then(r => res.json(r))
 })
 
-app.get('/api/words/:id', (req, res) => {
-  const id = Number(req.params.id)
-
-  res.json(words[id - 1])
+app.get('/api/words/:id', (req, res, next) => {
+  Entry
+    .findById(req.params.id)
+    .then(r => {
+      if (r) {
+        res.json(r)
+      } else {
+        res.status(404).end()
+      }
+    })
+    .catch(err => next(err))
 })
 
 app.post('/api/words', (req, res) => {
-  const word = {
+  const body = {
     de: req.body.de
   }
 
-  translate(word.de, {from: 'de', to: 'en'})
+  translate(body.de, {from: 'de', to: 'en'})
     .then(r => {
-      word.en = r.text
+      body.en = r.text
 
-      translate(word.de, {from: 'de', to: 'ru'})
+      translate(body.de, {from: 'de', to: 'ru'})
         .then(r => {
-          word.ru = r.text
-          
-          word.id = words.length + 1
-          
-          words = words.concat(word)
-          res.json(word)
+          body.ru = r.text
+               
+          const entry = new Entry({
+            de: body.de,
+            en: body.en,
+            ru: body.ru,
+          })
+
+          entry
+            .save()
+            .then(r => res.json(r))
         })
     })
-  
 })
 
-app.delete('/api/words/:id', (req, res) => {
-  const id = Number(req.params.id)
 
-  words = words.filter(i => i.id !== id)
-  res.status(204).end()
+app.delete('/api/words/:id', (req, res, next) => {
+  Entry
+    .findByIdAndRemove(req.params.id)
+    .then(r => res.status(204).end())
+    .catch(err => next(err))
 })
+
+
+//edge case handlers
 
 const unknownEndpoint = (req, res) => {
   res.status(404).send({ error: 'unknown endpoint' })
@@ -59,6 +81,19 @@ const unknownEndpoint = (req, res) => {
 
 app.use(unknownEndpoint)
 
+const errorHandler = (err, req, res, next) => {
+  console.error(err.message)
+
+  if (err.name ==='CastError') {
+    return res.status(400).send({ error: 'malformed id' })
+  }
+
+  next(err)
+}
+
+app.use(errorHandler)
+
+/*
 let words = [
     {
       id: 1,
@@ -82,8 +117,9 @@ let words = [
       ru: 'Член (п.)'
     }
   ]
+*/
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Running on ${PORT}`)
 })
