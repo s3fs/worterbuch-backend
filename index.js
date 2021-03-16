@@ -40,7 +40,7 @@ app.get('/api/words/:id', (req, res, next) => {
 })
 
 app.post('/api/words', (req, res) => {
-  res.set('Access-Control-Allow-Origin: *')
+  res.set('Access-Control-Allow-Origin', '*')
   const body = {
     de: req.body.de
   }
