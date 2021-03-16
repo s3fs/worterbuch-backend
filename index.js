@@ -1,14 +1,14 @@
 require('dotenv').config()
 
 const Entry = require('./models/mongoose')
-
 const express = require('express')
 const cors = require('cors')
-
 const translate = require('@vitalets/google-translate-api')
 
 const app = express()
+
 app.use(cors())
+
 app.use(express.json())
 
 const entries = Entry.find({})
@@ -23,6 +23,7 @@ app.get('/', (req, res) => {
 app.get('/api/words', (req, res) => {
     entries
       .then(r => res.json(r))
+      .catch(err => console.log('err', err))
 })
 
 app.get('/api/words/:id', (req, res, next) => {
@@ -35,7 +36,7 @@ app.get('/api/words/:id', (req, res, next) => {
         res.status(404).end()
       }
     })
-    .catch(err => next(err))
+    .catch(err => console.log('err', err))
 })
 
 app.post('/api/words', (req, res) => {
@@ -54,13 +55,16 @@ app.post('/api/words', (req, res) => {
           const entry = new Entry({
             de: body.de,
             en: body.en,
-            ru: body.ru,
+            ru: body.ru
           })
+        
 
           entry
             .save()
             .then(r => res.json(r))
+            .catch(err => console.log('err', err))
         })
+        .catch(err => console.log('err', err))
     })
 })
 
@@ -69,7 +73,7 @@ app.delete('/api/words/:id', (req, res, next) => {
   Entry
     .findByIdAndRemove(req.params.id)
     .then(r => res.status(204).end())
-    .catch(err => next(err))
+    .catch(err => console.log('err', err))
 })
 
 
@@ -81,6 +85,7 @@ const unknownEndpoint = (req, res) => {
 
 app.use(unknownEndpoint)
 
+/*
 const errorHandler = (err, req, res, next) => {
   console.error(err.message)
 
@@ -92,34 +97,9 @@ const errorHandler = (err, req, res, next) => {
 }
 
 app.use(errorHandler)
-
-/*
-let words = [
-    {
-      id: 1,
-      art: 'das',
-      de: 'Buch',
-      en: 'Book',
-      ru: 'Книга'
-    },
-    {
-      id: 2,
-      art: 'das',
-      de: 'Fehrrad',
-      en: 'Bicycle',
-      ru: 'велосипед'
-    },
-    {
-      id: 3,
-      art: 'das',
-      de: 'Glied',
-      en: 'Peis',
-      ru: 'Член (п.)'
-    }
-  ]
 */
 
-const PORT = process.env.PORT
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
     console.log(`Running on ${PORT}`)
 })
